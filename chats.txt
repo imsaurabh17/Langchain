@@ -1,0 +1,2 @@
+human, "When my refund will be initiated"
+system,"You will receive it in 3-5 business days
