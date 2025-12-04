@@ -67,9 +67,11 @@ Instructions : {instructions}, Input: {review}
 input_variables=['instructions','review'])
 
 for review in reviews:
-    prompt_input = prompt.format(instructions=instructions,review=review)
-    output = model.with_structured_output(Pipeline)
-    result = output.invoke(prompt_input)
-    print(result.model_dump_json(indent=2))
-    
+    try:
+        prompt_input = prompt.format(instructions=instructions,review=review)
+        output = model.with_structured_output(Pipeline)
+        result = output.invoke(prompt_input)
+        print(result.model_dump_json(indent=2))
+    except Exception as e:
+        print(f"Error in processing: {e}")
 

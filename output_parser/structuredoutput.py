@@ -26,3 +26,5 @@ result = llm.invoke(prompt)
 final = result.model_json_schema(result)
 
 print(final)
+
+#made changes
