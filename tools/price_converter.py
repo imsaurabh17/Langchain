@@ -1,13 +1,17 @@
 import os
 import json
-from langchain_core.tools import tool
+from typing import Annotated
+from langchain_core.tools import tool, InjectedToolArg
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import requests
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 load_dotenv()
 
 EXCHANGE_RATE_API = os.getenv("EXCHANGE_RATE_API")
+
+messages = []
 
 @tool
 def get_convert_rate(source_currency: str, target_currency: str) -> int:
@@ -27,7 +31,7 @@ def get_convert_rate(source_currency: str, target_currency: str) -> int:
     
 
 @tool    
-def convert_value(source_value: float, conversion_rate: float) -> float:
+def convert_value(source_value: float, conversion_rate: Annotated[float, InjectedToolArg]) -> float:
     """
     This tool will convert the source value into the target value with the help of conversion rate.
     """
@@ -36,9 +40,32 @@ def convert_value(source_value: float, conversion_rate: float) -> float:
 
     return result
 
+tools = [get_convert_rate, convert_value]
+
+llm = ChatGroq(model="llama-3.3-70b-versatile")
+
+llm_with_tools = llm.bind_tools(tools)
+
 
 if __name__=="__main__":
 
-    conversion_rate = get_convert_rate.invoke({"source_currency": "AED", "target_currency": "INR"})
+    query = HumanMessage("convert 250 AUD to USD")
 
-    print(convert_value.invoke({"source_value":10,"conversion_rate":conversion_rate}))
+    messages.append(query)
+
+    ai_message = llm_with_tools.invoke(messages)
+
+    messages.append(ai_message)
+
+    for tool in ai_message.tool_calls:
+        if tool["name"] == "get_convert_rate":
+            output = get_convert_rate.invoke(tool["args"])
+            messages.append(ToolMessage(content=output,tool_call_id=tool["id"]))
+            
+        if tool["name"] == "convert_value":
+            args = {**tool["args"],"conversion_rate":output}
+            output = convert_value.invoke(args)
+            messages.append(ToolMessage(content=output,tool_call_id=tool["id"]))
+
+    result = llm_with_tools.invoke(messages)
+    print(result.content)
