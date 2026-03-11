@@ -36,15 +36,45 @@ def get_exchange_rate(source_currency: str, target_currency: str) -> float:
         return "API Failed to fetch the conversion rate"
     
 @tool
-def calculate_investment(share: int, price: Annotated[float, InjectedToolArg], rate: Annotated[float,InjectedToolArg]) -> float:
+def calculate_investment(share: int, price: float, rate: float) -> float:
     """This tool will provide the total investment"""
 
     investment = share * price * rate
 
     return investment
 
+llm = ChatGroq(model="llama-3.3-70b-versatile")
+
+tools = [get_stock_price,get_exchange_rate,calculate_investment]
+
+llm_with_tools = llm.bind_tools(tools)
+
 
 if __name__=="__main__":
+    messages = []
     stock_price = get_stock_price.invoke({"stock_symbol":"AAPL"})
     rate = get_exchange_rate.invoke({"source_currency":"USD","target_currency":"INR"})
-    print(calculate_investment.invoke({"share":10,"price":stock_price,"rate":rate}))
+    #print(calculate_investment.invoke({"share":10,"price":stock_price,"rate":rate}))
+    query = HumanMessage("what is the cost of 10 shares of AAPL in INR?")
+    messages.append(query)
+    ai_message = llm_with_tools.invoke(messages)
+    messages.append(ai_message)
+    for tool_call in ai_message.tool_calls:
+
+        if tool_call["name"] == "get_stock_price":
+            output = get_stock_price.invoke(tool_call["args"])
+            messages.append(ToolMessage(content=output, tool_call_id=tool_call["id"]))
+        
+        if tool_call["name"] == "get_exchange_rate":
+            rate = get_exchange_rate.invoke(tool_call["args"])
+            messages.append(ToolMessage(content=rate,tool_call_id=tool_call["id"]))
+
+    ai_message_2 = llm_with_tools.invoke(messages)
+
+    for tool in ai_message_2.tool_calls:
+        if tool["name"] == "calculate_investment":
+            investment = calculate_investment.invoke(tool["args"])
+            print(investment)
+            messages.append(ToolMessage(content=investment,tool_call_id=tool["id"]))
+
+    print(messages)
