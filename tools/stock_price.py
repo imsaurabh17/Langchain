@@ -55,7 +55,7 @@ if __name__=="__main__":
     stock_price = get_stock_price.invoke({"stock_symbol":"AAPL"})
     rate = get_exchange_rate.invoke({"source_currency":"USD","target_currency":"INR"})
     #print(calculate_investment.invoke({"share":10,"price":stock_price,"rate":rate}))
-    query = HumanMessage("what is the cost of 10 shares of AAPL in INR?")
+    query = HumanMessage("if I buy 100 shares of Google, how much is that in INR")
     messages.append(query)
     ai_message = llm_with_tools.invoke(messages)
     messages.append(ai_message)
@@ -63,18 +63,19 @@ if __name__=="__main__":
 
         if tool_call["name"] == "get_stock_price":
             output = get_stock_price.invoke(tool_call["args"])
-            messages.append(ToolMessage(content=output, tool_call_id=tool_call["id"]))
+            messages.append(ToolMessage(content=str(output), tool_call_id=tool_call["id"]))
         
         if tool_call["name"] == "get_exchange_rate":
             rate = get_exchange_rate.invoke(tool_call["args"])
-            messages.append(ToolMessage(content=rate,tool_call_id=tool_call["id"]))
+            messages.append(ToolMessage(content=str(rate),tool_call_id=tool_call["id"]))
 
     ai_message_2 = llm_with_tools.invoke(messages)
+    messages.append(ai_message_2)
 
     for tool in ai_message_2.tool_calls:
         if tool["name"] == "calculate_investment":
             investment = calculate_investment.invoke(tool["args"])
-            print(investment)
-            messages.append(ToolMessage(content=investment,tool_call_id=tool["id"]))
+            messages.append(ToolMessage(content=str(investment),tool_call_id=tool["id"]))
 
-    print(messages)
+    final_investment = llm_with_tools.invoke(messages)
+    print(final_investment.content)
