@@ -24,8 +24,21 @@ def get_convert_rate(source_currency: str, target_currency: str) -> int:
         return conversion_rate
     else:
         return f"Issue"
+    
+
+@tool    
+def convert_value(source_value: float, conversion_rate: float) -> float:
+    """
+    This tool will convert the source value into the target value with the help of conversion rate.
+    """
+
+    result = source_value * conversion_rate
+
+    return result
 
 
 if __name__=="__main__":
 
-    print(get_convert_rate.invoke({"source_currency": "USD", "target_currency": "INR"}))
+    conversion_rate = get_convert_rate.invoke({"source_currency": "AED", "target_currency": "INR"})
+
+    print(convert_value.invoke({"source_value":10,"conversion_rate":conversion_rate}))
