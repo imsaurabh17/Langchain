@@ -50,7 +50,7 @@ agent = create_agent(
 
 if __name__=="__main__":
     result = agent.invoke({
-        "messages": [{"role": "user", "content": "What is the capital of spain and provide the current temprature and population of it."}]
+        "messages": [{"role": "user", "content": "Can you tell me about cristiano ronaldo and in which league he is currently playing and how many goals he has scored this season for each teams?"}]
     })
 
     print(result["messages"][-1].content)
