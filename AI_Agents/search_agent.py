@@ -44,15 +44,15 @@ llm = ChatGroq(model="openai/gpt-oss-120b")
 
 agent = create_agent(
     model=llm,
-    tools=[search_tool]
+    tools=[search_tool, get_weather]
 )
 
 
 if __name__=="__main__":
-    # result = agent.invoke({
-    #     "messages": [{"role": "user", "content": "What is the current temperature in Mumbai?"}]
-    # })
+    result = agent.invoke({
+        "messages": [{"role": "user", "content": "What is the capital of spain and provide the current temprature and population of it."}]
+    })
 
-    # print(result["messages"][-1].content)
+    print(result["messages"][-1].content)
 
-    print(get_weather.invoke({"city":"mumbai"}))
+    # print(get_weather.invoke({"city":"mumbai"}))
